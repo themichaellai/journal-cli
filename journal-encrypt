@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: journal-encrypt <file>"
+  exit 1
+fi
+
+output_file="$1.age"
+if [ -f "$output_file" ]; then
+  read -p "output file $1.age already exists. overwrite? (y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+journal_age_keys=$(find ~/.ssh -name "*pages*.pub" -o -name "*journal*.pub" -type f)
+recipient_args=()
+while IFS= read -r key_file; do
+  recipient_args+=("-R" "$key_file")
+done <<< "$journal_age_keys"
+
+(set -x; age "${recipient_args[@]}" -o "$output_file" "$1")
+echo "wrote $output_file"

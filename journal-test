@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+  echo "usage: journal-test <file.age>"
+  exit 1
+fi
+
+journal_age_keys=$(find ~/.ssh -name "*pages*" -o -name "*journal*" -type f | grep -v '\.pub$')
+identity_args=()
+while IFS= read -r key_file; do
+  identity_args+=("-i" "$key_file")
+done <<< "$journal_age_keys"
+
+(set -x; age -d "${identity_args[@]}" "$1" | head -c 300)
